@@ -2,8 +2,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, Security, status
+from fastapi.security import APIKeyHeader, HTTPBearer, HTTPAuthorizationCredentials
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret")
 ALGORITHM = "HS256"
@@ -29,8 +29,17 @@ def decode_token(token: str) -> dict:
 _bearer = HTTPBearer()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(_bearer)) -> dict:
-    """FastAPI dependency — extracts and validates the Bearer JWT, returns its payload."""
+    """FastAPI dependency — validates Bearer JWT, returns its payload."""
     try:
         return decode_token(credentials.credentials)
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+
+_api_key_header = APIKeyHeader(name="X-API-Key")
+
+def verify_lambda_key(api_key: str = Security(_api_key_header)):
+    """FastAPI dependency — validates the API key sent by Lambda."""
+    expected = os.getenv("LAMBDA_API_KEY", "")
+    if not expected or api_key != expected:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key")

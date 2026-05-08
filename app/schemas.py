@@ -41,6 +41,7 @@ class LotStatusResponse(BaseModel):
     slots: List[SlotStatus]
 
 class SlotsUpdateRequest(BaseModel):
+    lot_id: int
     image_key: str = ""
     slots: Dict[str, str]  # { "A1": "empty"/"occupied", "B2": "empty"/"occupied", ... }
 
