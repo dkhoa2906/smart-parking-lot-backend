@@ -1,6 +1,13 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import Dict, List
+
+
+# ---------- Lots ----------
+
+class CreateLotRequest(BaseModel):
+    name: str
+    location: str
 
 
 # ---------- Users ----------
@@ -33,14 +40,9 @@ class LotStatusResponse(BaseModel):
     occupied: int
     slots: List[SlotStatus]
 
-class SlotUpdateItem(BaseModel):
-    slot_number: str
-    status: str  
-
 class SlotsUpdateRequest(BaseModel):
-    lot_id: int
-    image_key: str
-    slots: List[SlotUpdateItem]
+    image_key: str = ""
+    slots: Dict[str, str]  # { "A1": "empty"/"occupied", "B2": "empty"/"occupied", ... }
 
 class HistoryItem(BaseModel):
     slot_id: int

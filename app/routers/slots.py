@@ -44,35 +44,43 @@ def get_lot_status(lot_id: int, current_user: dict = Depends(get_current_user)):
 def update_slots(payload: SlotsUpdateRequest, current_user: dict = Depends(get_current_user)):
     """
     Called by the Lambda function after Gemini analyzes a parking image.
-    Updates the current status of each slot and writes a history record.
+    Accepts a dict of { slot_number: status } — status can be "empty" or "occupied".
+    Slot names can have any prefix (A1, B3, C10, etc.).
+    Skips slot_numbers that don't exist in the lot.
     """
-    if current_user.get("lot_id") != payload.lot_id:
-        raise HTTPException(status_code=403, detail="Access denied: not your lot")
+    lot_id = current_user.get("lot_id")
+
+    # Normalize: "empty" → "free" to match DB values
+    STATUS_MAP = {"empty": "free", "free": "free", "occupied": "occupied"}
+
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            for item in payload.slots:
-                # Find slot by lot_id + slot_number
+            updated = 0
+            for slot_number, raw_status in payload.slots.items():
+                status = STATUS_MAP.get(raw_status.lower())
+                if status is None:
+                    continue  # ignore unknown status values
+
                 cur.execute(
                     "SELECT id FROM parking_slots WHERE lot_id = %s AND slot_number = %s",
-                    (payload.lot_id, item.slot_number)
+                    (lot_id, slot_number),
                 )
                 slot = cur.fetchone()
                 if not slot:
-                    continue
+                    continue  # slot doesn't exist in this lot, skip
 
-                # Update current status
                 cur.execute(
                     "UPDATE parking_slots SET status = %s, updated_at = NOW() WHERE id = %s",
-                    (item.status, slot["id"])
+                    (status, slot["id"]),
                 )
-
-                # Write history record
                 cur.execute(
                     "INSERT INTO slot_history (slot_id, status, image_key) VALUES (%s, %s, %s)",
-                    (slot["id"], item.status, payload.image_key)
+                    (slot["id"], status, payload.image_key),
                 )
+                updated += 1
+
         conn.commit()
-        return {"message": "Updated successfully", "count": len(payload.slots)}
+        return {"message": "Updated successfully", "updated": updated, "skipped": len(payload.slots) - updated}
     finally:
         conn.close()
