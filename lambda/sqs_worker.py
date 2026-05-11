@@ -4,14 +4,15 @@ import time
 import urllib.request
 import urllib.error
 import boto3
+from dotenv import load_dotenv
 
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+load_dotenv()
+
+
+AWS_REGION = "us-east-1"
 SQS_QUEUE_URL = os.environ["SQS_QUEUE_URL"]
 LAMBDA_API_KEY = os.environ["LAMBDA_API_KEY"]
-SLOTS_UPDATE_URL = os.getenv(
-    "SLOTS_UPDATE_URL",
-    "http://localhost:8080/api/slots/update",
-)
+SLOTS_UPDATE_URL = "http://localhost:8080/api/slots/update"
 
 sqs = boto3.client("sqs", region_name=AWS_REGION)
 
