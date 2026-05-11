@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import styles from "./styles";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "/api";
 
 // ─── API helpers ─────────────────────────────────────────────────────────────
 

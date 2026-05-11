@@ -12,7 +12,7 @@ app = FastAPI(
         "**Authentication:** All `/slots` and `/history` endpoints require a Bearer JWT token.\n"
         "Obtain a token via `POST /users/login`, then click **Authorize** and paste the token."
     ),
-    contact={"name": "Group 7", "email": "group7@university.ac.uk"},
+    contact={"name": "Group 7", "email": "dang.cao@mail.bcu.ac.uk"},
 )
 
 app.add_middleware(
