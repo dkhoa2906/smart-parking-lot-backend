@@ -53,6 +53,7 @@ def main():
             post_update(payload)
             sqs.delete_message(QueueUrl=SQS_QUEUE_URL, ReceiptHandle=receipt)
         except Exception:
+            print(f"Worker error: {e}")
             time.sleep(1)
 
 
